@@ -480,7 +480,7 @@ func (m *memWallet) SendOutputsWithoutChange(outputs []*wire.TxOut,
 // include a change output indicated by the change boolean.
 //
 // This function is safe for concurrent access.
-func (m *memWallet) CreateTransaction(outputs []*wire.TxOut,
+func (m *memWallet) CreateTransaction(outputs []*wire.TxOut, inputs []*wire.TxIn,
 	feeRate btcutil.Amount, change bool) (*wire.MsgTx, error) {
 
 	m.Lock()
@@ -496,9 +496,8 @@ func (m *memWallet) CreateTransaction(outputs []*wire.TxOut,
 		tx.AddTxOut(output)
 	}
 
-	// Attempt to fund the transaction with spendable utxos.
-	if err := m.fundTx(tx, outputAmt, feeRate, change); err != nil {
-		return nil, err
+	for _, input := range inputs {
+		tx.AddTxIn(input)
 	}
 
 	// Populate all the selected inputs with valid sigScript for spending.
